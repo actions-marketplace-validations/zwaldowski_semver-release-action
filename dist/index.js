@@ -35331,10 +35331,10 @@ module.exports = parseParams
 /***/ ((__webpack_module__, __unused_webpack___webpack_exports__, __nccwpck_require__) => {
 
 __nccwpck_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(7484);
-/* harmony import */ var _actions_exec__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(5236);
-/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(3228);
-/* harmony import */ var node_process__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(1708);
+/* harmony import */ var node_process__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(1708);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(7484);
+/* harmony import */ var _actions_exec__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(5236);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(3228);
 /* harmony import */ var semver__WEBPACK_IMPORTED_MODULE_4__ = __nccwpck_require__(2088);
 
 
@@ -35344,19 +35344,19 @@ __nccwpck_require__.a(__webpack_module__, async (__webpack_handle_async_dependen
 
 async function getMostRecentRepoTag() {
   console.log('Getting list of tags from repository')
-  const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('github_token', {required: true})
-  const prefix = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('prefix', {required: false}) || ''
-  const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_2__.getOctokit)(token)
+  const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('github_token', {required: true})
+  const prefix = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('prefix', {required: false}) || ''
+  const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_3__.getOctokit)(token)
 
   const {data: refs} = await octokit.rest.git.listMatchingRefs({
-    ..._actions_github__WEBPACK_IMPORTED_MODULE_2__.context.repo,
+    ..._actions_github__WEBPACK_IMPORTED_MODULE_3__.context.repo,
     ref: 'tags/'
   })
 
   const prx = new RegExp(`^${prefix}`, 'g')
   const versions = refs
     .map((ref) => ref.ref.replaceAll(/^refs\/tags\//g, '').replace(prx, ''))
-    .map((tag) => (0,semver__WEBPACK_IMPORTED_MODULE_4__.coerce)(tag, {loose: true}))
+    .map((tag) => (0,semver__WEBPACK_IMPORTED_MODULE_4__.parse)(tag, {loose: true}) ?? (0,semver__WEBPACK_IMPORTED_MODULE_4__.coerce)(tag))
     .filter((version) => version !== null)
     .sort(semver__WEBPACK_IMPORTED_MODULE_4__.rcompare)
 
@@ -35377,21 +35377,22 @@ async function getMostRecentBranchTag() {
     }
   }
   options.cwd = '.'
-  let exitCode = await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec)('git', ['fetch', '--tags', '--quiet'], options)
+  let exitCode = await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec)('git', ['fetch', '--tags', '--quiet'], options)
   if (exitCode !== 0) {
     throw new Error(error)
   }
 
-  exitCode = await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec)('git', ['tag', '--no-column', '--merged'], options)
+  exitCode = await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_2__.exec)('git', ['tag', '--no-column', '--merged'], options)
   if (exitCode !== 0) {
     throw new Error(error)
   }
 
-  const prefix = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('prefix', {required: false}) || ''
+  const prefix = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('prefix', {required: false}) || ''
   const prx = new RegExp(`^${prefix}`, 'g')
   const versions = output
     .split('\n')
-    .map((tag) => (0,semver__WEBPACK_IMPORTED_MODULE_4__.coerce)(tag.replace(prx, ''), {loose: true}))
+    .map((tag) => tag.replace(prx, ''))
+    .map((tag) => (0,semver__WEBPACK_IMPORTED_MODULE_4__.parse)(tag, {loose: true}) ?? (0,semver__WEBPACK_IMPORTED_MODULE_4__.coerce)(tag))
     .filter((version) => version !== null)
     .sort(semver__WEBPACK_IMPORTED_MODULE_4__.rcompare)
 
@@ -35399,7 +35400,7 @@ async function getMostRecentBranchTag() {
 }
 
 async function mostRecentTag() {
-  const perBranch = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('per_branch', {required: false})
+  const perBranch = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('per_branch', {required: false})
   if (perBranch === 'true') {
     return getMostRecentBranchTag()
   }
@@ -35408,45 +35409,45 @@ async function mostRecentTag() {
 }
 
 async function createTag(version) {
-  const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('github_token', {required: true})
-  const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_2__.getOctokit)(token)
-  const sha = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('sha') || _actions_github__WEBPACK_IMPORTED_MODULE_2__.context.sha
+  const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('github_token', {required: true})
+  const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_3__.getOctokit)(token)
+  const sha = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('sha') || _actions_github__WEBPACK_IMPORTED_MODULE_3__.context.sha
   const ref = `refs/tags/${version}`
   await octokit.rest.git.createRef({
-    ..._actions_github__WEBPACK_IMPORTED_MODULE_2__.context.repo,
+    ..._actions_github__WEBPACK_IMPORTED_MODULE_3__.context.repo,
     ref,
     sha
   })
 }
 
 try {
-  let version = (0,semver__WEBPACK_IMPORTED_MODULE_4__.parse)(node_process__WEBPACK_IMPORTED_MODULE_3__.env.VERSION)
+  let version = (0,semver__WEBPACK_IMPORTED_MODULE_4__.parse)(node_process__WEBPACK_IMPORTED_MODULE_0__.env.VERSION)
   if (version === null) {
-    const bump = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('bump', {required: true})
+    const bump = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('bump', {required: true})
     const latestTag = await mostRecentTag()
-    const identifier = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('preid', {required: false}) || ''
+    const identifier = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('preid', {required: false}) || ''
     console.log(
       `Using latest tag "${latestTag.toString()}" with identifier "${identifier}"`
     )
     version = (0,semver__WEBPACK_IMPORTED_MODULE_4__.inc)(latestTag, bump, identifier)
   }
 
-  const prefix = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('prefix', {required: false}) || ''
+  const prefix = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('prefix', {required: false}) || ''
   const versionTag = prefix + version.toString()
   console.log(`Using tag prefix "${prefix}"`)
 
-  ;(0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.exportVariable)('VERSION', version.toString())
-  ;(0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput)('version', version.toString())
-  ;(0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput)('version_optimistic', `${(0,semver__WEBPACK_IMPORTED_MODULE_4__.major)(version)}.${(0,semver__WEBPACK_IMPORTED_MODULE_4__.minor)(version)}`)
-  ;(0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput)('version_tag', versionTag)
+  ;(0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.exportVariable)('VERSION', version.toString())
+  ;(0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.setOutput)('version', version.toString())
+  ;(0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.setOutput)('version_optimistic', `${(0,semver__WEBPACK_IMPORTED_MODULE_4__.major)(version)}.${(0,semver__WEBPACK_IMPORTED_MODULE_4__.minor)(version)}`)
+  ;(0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.setOutput)('version_tag', versionTag)
 
   console.log(`Result: "${version.toString()}" (tag: "${versionTag}")`)
 
-  if ((0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('dry_run') !== 'true') {
+  if ((0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('dry_run') !== 'true') {
     await createTag(versionTag)
   }
 } catch (error) {
-  (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed)(error.message)
+  (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.setFailed)(error.message)
 }
 
 __webpack_async_result__();

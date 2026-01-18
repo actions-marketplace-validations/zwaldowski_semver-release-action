@@ -18,7 +18,7 @@ async function getMostRecentRepoTag() {
   const prx = new RegExp(`^${prefix}`, 'g')
   const versions = refs
     .map((ref) => ref.ref.replaceAll(/^refs\/tags\//g, '').replace(prx, ''))
-    .map((tag) => coerce(tag, {loose: true}))
+    .map((tag) => parse(tag, {loose: true}) ?? coerce(tag))
     .filter((version) => version !== null)
     .sort(rcompare)
 
@@ -53,7 +53,8 @@ async function getMostRecentBranchTag() {
   const prx = new RegExp(`^${prefix}`, 'g')
   const versions = output
     .split('\n')
-    .map((tag) => coerce(tag.replace(prx, ''), {loose: true}))
+    .map((tag) => tag.replace(prx, ''))
+    .map((tag) => parse(tag, {loose: true}) ?? coerce(tag))
     .filter((version) => version !== null)
     .sort(rcompare)
 
