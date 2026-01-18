@@ -18,5 +18,6 @@ jobs:
           bump: patch
           github_token: ${{ secrets.GITHUB_TOKEN }}
           dry_run: true
+          prefix: v
       - name: Output version
         run: echo "New version is ${{ steps.semver.outputs.version }}"
